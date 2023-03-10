@@ -16,7 +16,7 @@ app.use(express.json());
 
 const mongoose = require('mongoose');
 
-const mongoURL = "mongodb+srv://bivishan8686:jsxvH01MtNg46E5v@cluster0.y5o1jak.mongodb.net/?retryWrites=true&w=majority";
+const mongoURL = "mongodb+srv://bivishan8686:<password>@cluster0.y5o1jak.mongodb.net/?retryWrites=true&w=majority";
 
 function App() {
 
