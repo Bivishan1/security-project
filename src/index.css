@@ -147,3 +147,10 @@ button {
   justify-content: flex-end;
   padding-top:10px;
 }
+
+.line2 {
+  display: inline-block;
+  color:black;
+  text-decoration: none;
+  cursor: hand;
+}

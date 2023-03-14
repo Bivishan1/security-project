@@ -1,6 +1,7 @@
 import index from './index';
 import logo from './logo.svg';
 import Register from './components/Register';
+import Userdash from './components/Userdash';
 
 import ForgotPass from "./components/ForgotPass";
 import Signin from './components/Signin';
@@ -10,44 +11,9 @@ import {
   Route,
 } from "react-router-dom";
 
-// const express = require('express');
-const app = express();
-app.use(express.json());
-
-const mongoose = require('mongoose');
-
-const mongoURL = "mongodb+srv://bivishan8686:<password>@cluster0.y5o1jak.mongodb.net/?retryWrites=true&w=majority";
 
 function App() {
 
-  mongoose.connect(mongoURL, {
-    useNewUrlParser: true
-  }).then(() => {
-    console.log("Connected to database.");
-  }).catch((e) => console.log(e));
-
-  // require("./userDetails");
-
-  const User = mongoose.model("UserInfo");
-
-  app.post("/register", async (req, res) => {
-    const { uname, email, password } = req.body;
-
-    try {
-      await User.create({
-        username: uname,
-        email,
-        password,
-      });
-      res.send({ status: "ok" });
-    } catch (error) {
-      res.send({ status: 'Error' })
-    }
-  })
-
-  app.listen(5000, () => {
-    console.log("server started");
-  })
 
   return (
     <main className="App">
@@ -63,6 +29,8 @@ function App() {
           <Route path="signin" element={<Signin />} />
 
           <Route path="register" element={<Register />} />
+
+          <Route path="userDash" element={<Userdash />} />
           {/* If any route mismatches the upper 
           route endpoints then, redirect triggers 
           and redirects app to home component with to="/" */}

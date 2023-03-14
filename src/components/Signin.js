@@ -33,6 +33,9 @@ const Signin = () => {
     const [success, setSuccess] = useState(false);
 
 
+    useEffect(() => {
+        userRef.current.focus();
+    }, [])
 
     useEffect(() => {
         const result = USER_REGEX.test(user);
@@ -42,11 +45,18 @@ const Signin = () => {
     }, [user])
 
     useEffect(() => {
+        const result = PWD_REGEX.test(pwd);
+        console.log(result);
+        console.log(pwd);
+        setValidPwd(result);
+    }, [pwd])
+
+    useEffect(() => {
         setErrMsg('');
     }, [user, pwd])
 
     const handleSubmit = async (e) => {
-
+        console.log("inside handle" + user, pwd);
         e.preventDefault();
         // if button enabled with JS hack
         const v1 = USER_REGEX.test(user);
@@ -58,34 +68,58 @@ const Signin = () => {
         }
         // console.log(user, pwd);
         // setSuccess(true);
-        try {
-            const response = await axios.post(REGISTER_URL,
-                JSON.stringify({ user, pwd }),
-                {
-                    headers: { 'Content-Type': 'application/json' },
-                    withCredentials: true
+        fetch("http://localhost:5000/sign-in", {
+            method: "POST",
+            crossDomain: true,
+            headers: {
+                "Content-type": 'application/json',
+                Accept: "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: JSON.stringify({
+                user, pwd
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data, "user signin")
+                if (data.status == "ok") {
+                    alert("Sign-In Successful");
+                    window.localStorage.setItem("token", data.data);
+                    window.location.href = "./userDash";
+                } else {
+                    alert("Something went wrong");
                 }
-            );
-            console.log(response?.data);
-            console.log(response?.accessToken);
-            console.log(JSON.stringify(response))
-            setSuccess(true);
-            //clear state and controlled inputs
-            //need value attrib on inputs for this
-            setUser('');
-            setPwd('');
+                // setSuccess(true);
+            })
+        // try {
+        //     const response = await axios.post(REGISTER_URL,
+        //         JSON.stringify({ user, pwd }),
+        //         {
+        //             headers: { 'Content-Type': 'application/json' },
+        //             withCredentials: true
+        //         }
+        //     );
+        //     console.log(response?.data);
+        //     console.log(response?.accessToken);
+        //     console.log(JSON.stringify(response))
+        //     setSuccess(true);
+        //     //clear state and controlled inputs
+        //     //need value attrib on inputs for this
+        //     setUser('');
+        //     setPwd('');
 
-        }
-        catch (err) {
-            if (!err?.response) {
-                setErrMsg('No Server Response');
-            } else if (err.response?.status === 409) {
-                setErrMsg('Username Taken');
-            } else {
-                setErrMsg('SignUp Failed')
-            }
-            errRef.current.focus();
-        }
+        // }
+        // catch (err) {
+        //     if (!err?.response) {
+        //         setErrMsg('No Server Response');
+        //     } else if (err.response?.status === 409) {
+        //         setErrMsg('Username Taken');
+        //     } else {
+        //         setErrMsg('SignIn Failed')
+        //     }
+        //     errRef.current.focus();
+        // }
     }
 
 
@@ -122,7 +156,7 @@ const Signin = () => {
                             onFocus={() => setUserFocus(true)}
                             onBlur={() => setUserFocus(false)}
                         />
-                        <p id="uidnote" className={userFocus && user && !validName ? "instructions" : "offscreen"}>
+                        <p id="uidnote" className={userFocus && user ? "instructions" : "offscreen"}>
                             <FontAwesomeIcon icon={faInfoCircle} />
                             4 to 24 characters.<br />
                             <FontAwesomeIcon icon={faInfoCircle} />
@@ -155,6 +189,9 @@ const Signin = () => {
                                 {/* <a href="/forgotpass">Forgot Password?</a> */}
                             </span>
                         </p>
+
+
+
 
                         <button disabled={!validName || !validPwd ? true : false}>Sign In</button>
 

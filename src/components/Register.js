@@ -72,18 +72,43 @@ const Register = () => {
     }, [user, email, pwd, matchPwd])
 
     const handleSubmit = async (e) => {
-        console.log(user, email, pwd);
+        console.log("inside handle" + user, email, pwd);
         e.preventDefault();
-        // // if button enabled with JS hack
-        // const v1 = USER_REGEX.test(user);
-        // const v2 = PWD_REGEX.test(pwd);
-        // const v3 = EMAIL_REGEX.test(email);
-        // if (!v1 || !v2 || !v3) {
-        //     setErrMsg("Invalid Entry");
-        //     return;
-        // }
-        // // console.log(user, pwd);
-        // // setSuccess(true);
+        // if button enabled with JS hack
+        const v1 = USER_REGEX.test(user);
+        const v2 = PWD_REGEX.test(pwd);
+        const v3 = EMAIL_REGEX.test(email);
+        if (!v1 || !v2 || !v3) {
+            setErrMsg("Invalid Entry");
+            return;
+        }
+
+        fetch("http://localhost:5000/register", {
+            method: "POST",
+            crossDomain: true,
+            headers: {
+                "Content-type": 'application/json',
+                Accept: "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: JSON.stringify({
+                user, email, pwd
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data, "userregister")
+
+                // setSuccess(true);
+                if (data.status == "ok") {
+                    alert("Registration Successful");
+                    setSuccess(true);
+                } else {
+                    alert("Something went wrong");
+                }
+            })
+        // console.log(user, pwd);
+        // setSuccess(true);
         // try {
         //     const response = await axios.post(REGISTER_URL,
         //         JSON.stringify({ user, pwd, email }),
@@ -110,7 +135,7 @@ const Register = () => {
         //     } else {
         //         setErrMsg('Registration Failed')
         //     }
-        //     errRef.current.focus();
+        //     // errRef.current.focus;
         // }
     }
 
@@ -120,9 +145,9 @@ const Register = () => {
         <>
             {success ? (
                 <section>
-                    <h2>Successfully Login.</h2>
+                    <h2>Successfully Registered.</h2>
                     <p>
-                        <a href="#">Sign In</a>
+                        <a href="/signin">Sign In</a>
                     </p>
                 </section>
             ) :
