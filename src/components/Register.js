@@ -1,6 +1,8 @@
+
 import { useRef, useState, useEffect } from "react";
 import { faCheck, faTimes, faInfoCircle, faColonSign } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
+// const nodemailer = require("nodemailer");
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from '../api/axios';
@@ -37,6 +39,8 @@ const Register = () => {
     const [validMatch, setValidMatch] = useState(false);
     const [matchFocus, setMatchFocus] = useState(false);
 
+    const [verified, setVerified] = useState(0);
+
     const [errMsg, setErrMsg] = useState('');
     const [success, setSuccess] = useState(false);
 
@@ -69,7 +73,7 @@ const Register = () => {
 
     useEffect(() => {
         setErrMsg('');
-    }, [user, email, pwd, matchPwd])
+    }, [user, email, pwd, matchPwd, verified])
 
     const handleSubmit = async (e) => {
         console.log("inside handle" + user, email, pwd);
@@ -92,7 +96,7 @@ const Register = () => {
                 "Access-Control-Allow-Origin": "*"
             },
             body: JSON.stringify({
-                user, email, pwd
+                user, email, pwd, verified
             }),
         })
             .then((res) => res.json())
@@ -102,8 +106,12 @@ const Register = () => {
                 // setSuccess(true);
                 if (data.status == "ok") {
                     alert("Registration Successful");
-                    setSuccess(true);
-                } else {
+                    // setSuccess(true);
+                } else if (data.status == 'exist') {
+                    alert("Already Existed Username");
+                }
+
+                else {
                     alert("Something went wrong");
                 }
             })
@@ -145,7 +153,7 @@ const Register = () => {
         <>
             {success ? (
                 <section>
-                    <h2>Successfully Registered.</h2>
+                    <h2>Successfully Registered. Please verify your email.</h2>
                     <p>
                         <a href="/signin">Sign In</a>
                     </p>

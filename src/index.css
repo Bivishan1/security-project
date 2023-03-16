@@ -154,3 +154,18 @@ button {
   text-decoration: none;
   cursor: hand;
 }
+
+.btn {
+  cursor:pointer;
+  background-color: cornflowerblue;
+  color:#fff;
+  border:0px white solid;
+}
+
+.btn:hover {
+  background-color:#5090d1;
+}
+
+.px-3 {
+  margin-right: 40px;
+}

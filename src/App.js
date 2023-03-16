@@ -14,14 +14,14 @@ import {
 
 function App() {
 
-
+  const loggedIn = window.localStorage.getItem('loggedIn');
   return (
     <main className="App">
       {/* <p>{!data ? "Loading..." : data}</p> */}
 
       <Router>
         <Routes>
-          <Route path="/" element={<Signin />} />
+          <Route path="/" element={loggedIn ? <Userdash /> : <Signin />} />
           {/* This route is for about component 
           with exact path "/about", in component 
           props we passes the imported component*/}

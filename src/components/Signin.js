@@ -87,6 +87,8 @@ const Signin = () => {
                     alert("Sign-In Successful");
                     window.localStorage.setItem("token", data.data);
                     window.location.href = "./userDash";
+                    window.localStorage.setItem('loggedIn', true);
+
                 } else {
                     alert("Something went wrong");
                 }
