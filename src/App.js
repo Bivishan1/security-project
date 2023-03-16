@@ -2,9 +2,11 @@ import index from './index';
 import logo from './logo.svg';
 import Register from './components/Register';
 import Userdash from './components/Userdash';
-
+import Verify from './components/Verify';
 import ForgotPass from "./components/ForgotPass";
 import Signin from './components/Signin';
+import { useParams } from "react-router-dom";
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,7 +15,7 @@ import {
 
 
 function App() {
-
+  const { userId } = useParams();
   const loggedIn = window.localStorage.getItem('loggedIn');
   return (
     <main className="App">
@@ -31,6 +33,8 @@ function App() {
           <Route path="register" element={<Register />} />
 
           <Route path="userDash" element={<Userdash />} />
+          {/* <Route path="/verify" render={(props) => <Verify {...props} userId={userId} />} /> */}
+          <Route exact path="verify/:id" element={<Verify />} />
           {/* If any route mismatches the upper 
           route endpoints then, redirect triggers 
           and redirects app to home component with to="/" */}
