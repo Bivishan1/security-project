@@ -6,6 +6,8 @@ import Verify from './components/Verify';
 import ForgotPass from "./components/ForgotPass";
 import Signin from './components/Signin';
 import { useParams } from "react-router-dom";
+import Changepwd from './components/Changepwd';
+import Alert from './components/MyAlert';
 
 import {
   BrowserRouter as Router,
@@ -29,12 +31,14 @@ function App() {
           props we passes the imported component*/}
           <Route path="forgotpass" element={<ForgotPass />} />
           <Route path="signin" element={<Signin />} />
-
+          <Route path="changepwd" element={loggedIn ? <Changepwd /> : <Signin />} />
           <Route path="register" element={<Register />} />
 
-          <Route path="userDash" element={<Userdash />} />
+          <Route path="userDash" element={loggedIn ? <Userdash /> : <Signin />} />
           {/* <Route path="/verify" render={(props) => <Verify {...props} userId={userId} />} /> */}
-          <Route exact path="verify/:id" element={<Verify />} />
+
+          <Route path="verify" element={<Verify />} />
+
           {/* If any route mismatches the upper 
           route endpoints then, redirect triggers 
           and redirects app to home component with to="/" */}

@@ -42,12 +42,61 @@ const ForgotPass = () => {
         setErrMsg('');
     }, [email])
 
+    const handleSubmit = (e) => {
+
+        console.log(email);
+        e.preventDefault();
+        // if button enabled with JS hack
+        const v3 = EMAIL_REGEX.test(email);
+        if (!v3) {
+            setErrMsg("Invalid Entry");
+            return;
+        }
+
+        fetch("http://localhost:5000/forgotpass", {
+            method: "POST",
+            crossDomain: true,
+            headers: {
+                "Content-type": 'application/json',
+                Accept: "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: JSON.stringify({
+                email,
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data, "forgotpassword")
+                if (data.status == "error") {
+                    alert("User email not found")
+                }
+                else if (data.status == "ok") {
+                    alert("Email has been sent. Please Verify before login.")
+                }
+                // setSuccess(true);
+                // if (data.status == "ok") {
+                //     window.localStorage.setItem("token", data.data);
+                //     alert("Registration Successful");
+                //     // setSuccess(true);
+                // } else if (data.status == 'exist') {
+                //     alert("Already Existed Username");
+                // }
+
+                // else {
+                //     alert("Something went wrong");
+                // }
+            });
+    }
+
+
+
     return (
         <>
             <section>
                 <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive"> {errMsg}</p>
-                <h1>Forgot Password</h1>
-                <form>
+                <h1>Forgot Password?</h1>
+                <form onSubmit={handleSubmit}>
 
 
                     <label htmlFor="email">

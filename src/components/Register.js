@@ -1,7 +1,9 @@
-
+import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRef, useState, useEffect } from "react";
 import { faCheck, faTimes, faInfoCircle, faColonSign } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
+import Reaptcha from 'reaptcha';
+// import ReCAPTCHA from 'react-google-recaptcha';
 // const nodemailer = require("nodemailer");
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,12 +13,14 @@ const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%_]).{8,24}$/;
 const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
 const REGISTER_URL = '/register';
+const siteKey = "6LdLcUUlAAAAALomOWyQXrySXyKn8MiZaCNrBt8e";
 
 // import Home component
 
 // clrl + alt+ R , search "rafce", get Register functional component.
 const Register = () => {
     // focus on user input when component loads.
+    const captchaRef = useRef(null);
     const userRef = useRef();
     // focus on to display an error for accessibility
     const errRef = useRef();
@@ -26,6 +30,9 @@ const Register = () => {
     const [user, setUser] = useState('');
     const [validName, setValidName] = useState(false);
     const [userFocus, setUserFocus] = useState(false)
+
+    const [userType, setuserType] = useState('');
+    const [secretkey, setSecretkey] = useState('');
 
     const [email, setEmail] = useState('');
     const [validEmail, setValidEmail] = useState(false);
@@ -40,9 +47,26 @@ const Register = () => {
     const [matchFocus, setMatchFocus] = useState(false);
 
     const [verified, setVerified] = useState(0);
+    const [captchVerify, setcaptchVerify] = useState(false);
+
+    const [visible, setVisible] = useState(false);
+    const [nvisible, nsetVisible] = useState(false);
+
+    // const [admin, setAdmin] = useState(1);
 
     const [errMsg, setErrMsg] = useState('');
     const [success, setSuccess] = useState(false);
+
+    const [passwordUpdatedTimestamp, setPasswordUpdatedTimestamp] = useState(null);
+
+    const onVerify = recaptchaResponse => {
+        setcaptchVerify(true);
+    };
+
+    function onchange(value) {
+        console.log("captcha value", value);
+        setcaptchVerify(true);
+    }
 
     useEffect(() => {
         userRef.current.focus();
@@ -87,34 +111,53 @@ const Register = () => {
             return;
         }
 
-        fetch("http://localhost:5000/register", {
-            method: "POST",
-            crossDomain: true,
-            headers: {
-                "Content-type": 'application/json',
-                Accept: "application/json",
-                "Access-Control-Allow-Origin": "*"
-            },
-            body: JSON.stringify({
-                user, email, pwd, verified
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                console.log(data, "userregister")
+        if (userType == 'admin' && secretkey !== "biviSec123") {
+            e.preventDefault();
+            alert("Invalid Admin")
+        }
+        else {
 
-                // setSuccess(true);
-                if (data.status == "ok") {
-                    alert("Registration Successful");
-                    // setSuccess(true);
-                } else if (data.status == 'exist') {
-                    alert("Already Existed Username");
-                }
-
-                else {
-                    alert("Something went wrong");
-                }
+            fetch("http://localhost:5000/register", {
+                method: "POST",
+                crossDomain: true,
+                headers: {
+                    "Content-type": 'application/json',
+                    Accept: "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                body: JSON.stringify({
+                    user, email, pwd, userType
+                }),
             })
+                .then((res) => res.json())
+                .then((data) => {
+                    console.log(data, "userregister")
+
+                    // setSuccess(true);
+                    if (data.status == "ok") {
+                        window.localStorage.setItem("token", data.data);
+                        alert("Registration Successful");
+                        window.location.href = './';
+                        setPasswordUpdatedTimestamp(Date.now());
+                        localStorage.setItem('passwordUpdatedTimestamp', Date.now());
+                        // setSuccess(true);
+                    } else if (data.status == 'exist') {
+                        alert("Already Existed Username");
+                    }
+                    else if (data.status == "top") {
+
+                        // setErrMsg('Password not allowed.');
+                        alert("it's on top 5 password, which is not allowed")
+                        console.log("Password not allowed");
+                        return;
+
+                    }
+
+                    else {
+                        alert("Something went wrong");
+                    }
+                })
+        }
         // console.log(user, pwd);
         // setSuccess(true);
         // try {
@@ -162,7 +205,47 @@ const Register = () => {
                 <section>
                     <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive"> {errMsg}</p>
                     <h1>Register</h1>
+                    <div>
+                        <input type="radio"
+                            id="user"
+                            name="userType"
+                            ref={userRef}
+                            onChange={(e) => setuserType(e.target.value)}
+                            value="user"
+                            required
+                            aria-describedby="radio"
+                        />
+                        <label htmlFor="user" style={{ marginRight: 30 }}>User</label>
+
+                        <input type="radio"
+                            id="admin"
+                            name="userType"
+                            ref={userRef}
+                            onChange={(e) => setuserType(e.target.value)}
+                            value="admin"
+                            required
+                            aria-describedby="radio"
+                        />
+                        <label htmlFor="admin">Admin</label>
+
+                    </div>
                     <form onSubmit={handleSubmit}>
+
+
+                        {userType == "admin" ?
+                            <div>
+                                <label htmlFor="user">Secret Key:</label>
+                                <input type="text"
+                                    id="type"
+                                    name="secretkey"
+                                    ref={userRef}
+                                    onChange={(e) => setSecretkey(e.target.value)}
+                                    value={secretkey}
+                                    required
+                                    aria-describedby="radio"
+                                /></div> : null}
+
+
                         <label htmlFor="username">
                             Username:
                             <FontAwesomeIcon icon={faCheck} className={validName ? "valid" : "hide"} />
@@ -222,17 +305,22 @@ const Register = () => {
                             <FontAwesomeIcon icon={faCheck} className={validPwd ? "valid" : "hide"} />
                             <FontAwesomeIcon icon={faTimes} className={validPwd || !pwd ? "hide" : "invalid"} />
                         </label>
-                        <input
-                            type="password"
-                            id="password"
-                            onChange={(e) => setPwd(e.target.value)}
-                            value={pwd}
-                            required
-                            aria-invalid={validPwd ? "false" : "true"}
-                            aria-describedby="pwdnote"
-                            onFocus={() => setPwdFocus(true)}
-                            onBlur={() => setPwdFocus(false)}
-                        />
+                        <div className="flex justify-between items-center mx-8 position-relative">
+                            <input
+                                type={visible ? "text" : "password"}
+                                id="password" className="bg-gray-200 text-gray-900 text-sm w=[300px] mw-100 position-relative"
+                                onChange={(e) => setPwd(e.target.value)}
+                                value={pwd}
+                                required
+                                aria-invalid={validPwd ? "false" : "true"}
+                                aria-describedby="pwdnote"
+                                onFocus={() => setPwdFocus(true)}
+                                onBlur={() => setPwdFocus(false)}
+                            />
+                            <span onClick={() => { setVisible(!visible) }}> {visible ? <EyeOutlined className="eyeicon" /> : <EyeInvisibleOutlined className="eyeicon" />}</span>
+
+                        </div>
+
                         <p id="pwdnote" className={pwdFocus && !validPwd ? "instructions" : "offscreen"}>
                             <FontAwesomeIcon icon={faInfoCircle} />
                             8 to 24 characters.<br />
@@ -248,25 +336,28 @@ const Register = () => {
                             <FontAwesomeIcon icon={faCheck} className={validMatch && matchPwd ? "valid" : "hide"} />
                             <FontAwesomeIcon icon={faTimes} className={validMatch || !matchPwd ? "hide" : "invalid"} />
                         </label>
-                        <input
-                            type="password"
-                            id="confirm_pwd"
-                            onChange={(e) => setMatchPwd(e.target.value)}
-                            value={matchPwd}
-                            required
-                            aria-invalid={validMatch ? "false" : "true"}
-                            aria-describedby="confirmnote"
-                            onFocus={() => setMatchFocus(true)}
-                            onBlur={() => setMatchFocus(false)}
-                        />
+                        <div className="flex justify-between items-center mx-8 position-relative">
+                            <input
+                                type={nvisible ? "text" : "password"}
+                                id="confirm_pwd"
+                                onChange={(e) => setMatchPwd(e.target.value)} className="bg-gray-200 text-gray-900 text-sm w=[300px] mw-100 position-relative"
+                                value={matchPwd}
+                                required
+                                aria-invalid={validMatch ? "false" : "true"}
+                                aria-describedby="confirmnote"
+                                onFocus={() => setMatchFocus(true)}
+                                onBlur={() => setMatchFocus(false)}
+                            />
+                            <span onClick={() => { nsetVisible(!nvisible) }}> {nvisible ? <EyeOutlined className="eyeicon" /> : <EyeInvisibleOutlined className="eyeicon" />}</span>
+                        </div>
                         <p id="confirmnote" className={matchFocus && !validMatch ? "instructions" : "offscreen"}>
                             <FontAwesomeIcon icon={faInfoCircle} />
                             Must match the first password input field.
                         </p>
-
-
-
-                        <button disabled={!validName || !validPwd || !validMatch || !validEmail ? true : false}>Sign Up</button>
+                        <label htmlFor="">
+                            <Reaptcha sitekey={siteKey} onVerify={onVerify} />
+                        </label>
+                        <button disabled={!validName || !validPwd || !validMatch || !captchVerify || !validEmail ? true : false}>Sign Up</button>
 
                     </form>
                     <p>Already Have an Account ? <br />

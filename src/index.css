@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color:#fff;
 }
 
 code {
@@ -168,4 +169,42 @@ button {
 
 .px-3 {
   margin-right: 40px;
+}
+
+table, th, td {
+  border: 1px solid;
+border-collapse: collapse;
+}
+
+.limit-error {
+  background-color: darksalmon;
+}
+
+.attempt-error {
+  background-color: goldenrod;
+}
+
+.expire-alert{
+  position: absolute;
+  margin-bottom: 540px;
+}
+
+.alert {
+  --bs-alert-padding-x:0;
+  --bs-alert-padding-y:0;
+}
+
+.alert-dismissible .btn-close {
+  top:-24px;
+  
+}
+
+.mw-100 {width: 100%;}
+
+.eyeicon {
+position:absolute;
+padding-top: 14px;
+right: 10px;
+cursor: pointer;
+color:black;
 }

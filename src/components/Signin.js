@@ -1,19 +1,27 @@
+import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRef, useState, useEffect } from "react";
 import { faCheck, faTimes, faInfoCircle, faColonSign } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from '../api/axios';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%_]).{8,24}$/;
 const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+
+
 const REGISTER_URL = '/register';
+
+
+
 
 // import Home component
 
 // clrl + alt+ R , search "rafce", get Register functional component.
 const Signin = () => {
+    const captchaRef = useRef(null);
     // focus on user input when component loads.
     const userRef = useRef();
     // focus on to display an error for accessibility
@@ -32,10 +40,24 @@ const Signin = () => {
     const [errMsg, setErrMsg] = useState('');
     const [success, setSuccess] = useState(false);
 
+    const [errorMessage, setErrorMessage] = useState("");
+    const [remainingAttempts, setRemainingAttempts] = useState(3);
+    const [timerr, setTimer] = useState(null);
+
+    const [visible, setVisible] = useState(false);
+
+    const [captchVerify, setcaptchVerify] = useState(false);
+
+    function onchange(value) {
+        console.log("captcha value", value);
+        setcaptchVerify(true);
+    }
 
     useEffect(() => {
         userRef.current.focus();
     }, [])
+
+
 
     useEffect(() => {
         const result = USER_REGEX.test(user);
@@ -56,44 +78,64 @@ const Signin = () => {
     }, [user, pwd])
 
     const handleSubmit = async (e) => {
-        console.log("inside handle" + user, pwd);
-        e.preventDefault();
-        // if button enabled with JS hack
-        const v1 = USER_REGEX.test(user);
-        const v2 = PWD_REGEX.test(pwd);
-        // const v3 = EMAIL_REGEX.test(email);
-        if (!v1 || !v2) {
-            setErrMsg("Invalid Entry");
-            return;
-        }
-        // console.log(user, pwd);
-        // setSuccess(true);
-        fetch("http://localhost:5000/sign-in", {
-            method: "POST",
-            crossDomain: true,
-            headers: {
-                "Content-type": 'application/json',
-                Accept: "application/json",
-                "Access-Control-Allow-Origin": "*"
-            },
-            body: JSON.stringify({
-                user, pwd
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                console.log(data, "user signin")
-                if (data.status == "ok") {
-                    alert("Sign-In Successful");
-                    window.localStorage.setItem("token", data.data);
-                    window.location.href = "./userDash";
-                    window.localStorage.setItem('loggedIn', true);
 
-                } else {
-                    alert("Something went wrong");
-                }
-                // setSuccess(true);
+
+        try {
+            console.log("inside handle" + user, pwd);
+            e.preventDefault();
+            // if button enabled with JS hack
+            const v1 = USER_REGEX.test(user);
+            const v2 = PWD_REGEX.test(pwd);
+            // const v3 = EMAIL_REGEX.test(email);
+            if (!v1 || !v2) {
+                setErrMsg("Invalid Entry");
+                return;
+            }
+            // console.log(user, pwd);
+            // setSuccess(true);
+            fetch("http://localhost:5000/sign-in", {
+                method: "POST",
+                crossDomain: true,
+                headers: {
+                    "Content-type": 'application/json',
+                    Accept: "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                body: JSON.stringify({
+                    user, pwd
+                }),
             })
+                .then((res) => res.json())
+                .then((data) => {
+                    console.log(data, "user signin")
+                    if (data.status == "ok") {
+                        alert("Sign-In Successful");
+                        window.localStorage.setItem("token", data.data);
+                        window.localStorage.setItem("token2", data.data);
+                        window.location.href = "./userDash";
+                        window.localStorage.setItem('loggedIn', true);
+
+                    }
+                    else {
+                        alert("user and password doesn't match")
+                        setErrorMessage('user and password matching error error');
+                        setRemainingAttempts((prev) => prev - 1);
+                        document.querySelector('.attempt-error').innerHTML = `<b>Wrong credentials. ${remainingAttempts} attempt left.</b>`;
+                    }
+                    // setSuccess(true);
+                })
+
+        }
+        catch (error) {
+            console.log(error)
+            setErrorMessage(error.response.data.message);
+            setRemainingAttempts((prev) => prev - 1);
+        }
+
+
+
+
+
         // try {
         //     const response = await axios.post(REGISTER_URL,
         //         JSON.stringify({ user, pwd }),
@@ -123,6 +165,23 @@ const Signin = () => {
         //     errRef.current.focus();
         // }
     }
+
+    useEffect(() => {
+        if (remainingAttempts < 0) {
+            // Disable login button and start timer
+            document.getElementById("login-button").disabled = true;
+            const interval = setInterval(() => {
+                setTimer((prev) => (prev === 0 ? null : prev - 1));
+            }, 1000);
+            setTimer(60);
+            setTimeout(() => {
+                // Enable login button and reset remaining attempts
+                document.getElementById("login-button").disabled = false;
+                setRemainingAttempts(3);
+                clearInterval(interval);
+            }, 60000);
+        }
+    }, [remainingAttempts]);
 
 
 
@@ -173,17 +232,21 @@ const Signin = () => {
                             <FontAwesomeIcon icon={faCheck} className={validPwd ? "valid" : "hide"} />
                             <FontAwesomeIcon icon={faTimes} className={validPwd || !pwd ? "hide" : "invalid"} />
                         </label>
-                        <input
-                            type="password"
-                            id="password"
-                            onChange={(e) => setPwd(e.target.value)}
-                            value={pwd}
-                            required
-                            aria-invalid={validPwd ? "false" : "true"}
-                            aria-describedby="pwdnote"
-                            onFocus={() => setPwdFocus(true)}
-                            onBlur={() => setPwdFocus(false)}
-                        />
+                        <div className="flex justify-between items-center mx-8 position-relative">
+                            <input
+                                type={visible ? "text" : "password"}
+                                id="password" className="bg-gray-200 text-gray-900 text-sm w=[300px] mw-100 position-relative"
+                                onChange={(e) => setPwd(e.target.value)}
+                                value={pwd}
+                                required
+                                aria-invalid={validPwd ? "false" : "true"}
+                                aria-describedby="pwdnote"
+                                onFocus={() => setPwdFocus(true)}
+                                onBlur={() => setPwdFocus(false)}
+                            />
+                            <span onClick={() => { setVisible(!visible) }}> {visible ? <EyeOutlined className="eyeicon" /> : <EyeInvisibleOutlined className="eyeicon" />}</span>
+
+                        </div>
 
                         <p>
                             <span className="line1">
@@ -193,11 +256,30 @@ const Signin = () => {
                         </p>
 
 
+                        <label htmlFor="">
+                            <ReCAPTCHA sitekey="6LdLcUUlAAAAALomOWyQXrySXyKn8MiZaCNrBt8e" ref={captchaRef} onChange={onchange} />
+                        </label>
 
-
-                        <button disabled={!validName || !validPwd ? true : false}>Sign In</button>
+                        <button id="login-button" disabled={!validName || !validPwd || !captchVerify ? true : false}>Sign In</button>
 
                     </form>
+
+
+                    {remainingAttempts < 0 ? (
+                        <p className="limit-error">
+
+                            You have exceeded the maximum number of login attempts. Please wait{" "}
+                            {timerr} seconds before trying again.
+                        </p>
+                    ) :
+                        <p>
+                            <span className="attempt-error"></span>
+                        </p>
+                    }
+
+                    {/* {errorMessage && <p>{errorMessage}</p>} */}
+
+
                     <p>Don't Have an Account ? <br />
                         <span className="line">
                             <a href="/register">Sign Up</a>
@@ -206,6 +288,8 @@ const Signin = () => {
 
                 </section>
             }
+
+
         </>
     )
 }
